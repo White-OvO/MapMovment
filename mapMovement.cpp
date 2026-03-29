@@ -1,211 +1,264 @@
 #include <iostream>
-#include <iomanip>
 #include <fstream>
 using namespace std;
 
-// global constants
-const int MAX_INVENTORY = 24, MAX_BANK = 24,
-          MAP_X_SIZE = 30, MAP_Y_SIZE = 15;
-
-// data type for map items
-struct Entity
-{
-    double chance = 1.0;
-    string type = "";
-};
-
-// data type for player
-struct Player
-{
-    int inventorySize = 0, position[2] = {14, 7};
-    Entity inventory[MAX_INVENTORY];
-};
-
-// prototypes
-void readMap(Entity[MAP_Y_SIZE][MAP_X_SIZE]);
-void displayMap(Entity[MAP_Y_SIZE][MAP_X_SIZE], Player);
-void displayInventory(Player);
-void displayBank(Entity[MAX_BANK], int);
-string getCommand();
-// PLACE YOUR PROTOTYPES FOR move(), chop(), mine(), bank() HERE
-
 int main()
 {
-    // variables
-    int bankSize = 0;
-    string command = "";
-    Player player;
-    Entity map[MAP_Y_SIZE][MAP_X_SIZE], storage[MAX_BANK];
-    srand(0);
-    // get the map
-    readMap(map);
+    const int row = 10;
+    const int col = 15;
+    string input = "";
+    char arr[row][col];
+    int moveInputRow;
+    int currentPosition;
+    int moveInputCol;
+
+    for (int i = 0; i < row; i++)
+
+        for (int j = 0; j < col; j++)
+
+            arr[i][j] = '\0';
+
+    // Open and read from trees.csv
+    ifstream iFile("trees.csv");
+    if (!iFile)
+    {
+        cout << "Error: Could not open trees.csv\n";
+        return 1;
+    }
+
+    string line;
+    getline(iFile, line); // Skip header line
+                          //  cout << line << endl;
+    while (!iFile.eof())
+    {
+        getline(iFile, line);
+        //  cout << line << endl;
+        int p = line.find(',');
+
+        int x = stoi(line.substr(0, p));
+        int y = stoi(line.substr(p + 1, line.length()));
+
+        arr[y][x] = 't';
+        arr[9][0] = 'p';
+    }
+
+    // verify that the x is a valid x . ( along the colum or going tothe negative colum or bigger colum
+    //  neither a negative row or a postive row .
+    // make sure its not on top of a tree
+    //  replace p sith a - or emprt charatcer when moving p
+    //  move the p where the new move coordinates
+
+    iFile.close();
+
+    // Display initial map
+
+    for (int i = 0; i < row; i++)
+    {
+        for (int j = 0; j < col; j++)
+        {
+            if (arr[i][j] == '\0')
+                cout << "_ ";
+            else
+                cout << arr[i][j] << " ";
+        }
+
+        cout << endl;
+    }
+
+    bool invalidInput = false;
     while (true)
     {
-        // show map/inventory
-        displayMap(map, player);
-        displayInventory(player);
-        displayBank(storage, bankSize);
+        // Prompt for move or quit
+        do
+        {
+            cout << "(m)ove -or- (q)uit? ";
+            cin >> input;
 
-        // display error from previous command if needed
-        if (command != "")
-            cout << command << endl;
+            if (cin.fail())
+            {
+                cin.clear();
+                cin.ignore(128, '\n');
+                input = "";
+            }
 
-        // get command
-        command = getCommand();
+            if (input != "m" && input != "M" && input != "q" && input != "Q")
+            {
+                cout << "Error: Invalid option\n";
+                for (int i = 0; i < row; i++)
+                {
+                    for (int j = 0; j < col; j++)
+                    {
+                        cout << (arr[i][j] == '\0' ? "_ " : string(1, arr[i][j]) + " ");
+                    }
+                    cout << endl;
+                }
+            }
+        } while (input != "m" && input != "M" && input != "q" && input != "Q");
 
-        // perform command
-        if (command == "move")
+        if (input == "q" || input == "Q")
         {
-            // PLACE YOUR FUNCTION CALL FOR MOVING HERE
-        }
-        else if (command == "chop")
-        {
-            // PLACE YOUR FUNCTION CALL FOR CHOPPING HERE
-        }
-        else if (command == "mine")
-        {
-            // PLACE YOUR FUNCTION CALL FOR MINING HERE
-        }
-        else if (command == "bank")
-        {
-            // PLACE YOUR FUNCTION CALL FOR BANKING HERE
-        }
-        else if (command == "exit")
-        {
+            cout << "\nQuitting...\n";
             break;
         }
+
+        // Move logic
+
+        // Validate row input
+        while (true)
+        {
+            cout << "\nMove Row: ";
+            cin >> moveInputRow;
+
+            if (!cin.fail() && moveInputRow >= 0 && moveInputRow <= 9)
+            {
+                invalidInput = false;
+                break; // valid row input
+            }
+
+            // Invalid input
+            invalidInput = true;
+            cout << "\nError: Move must be between 0 and 9\n";
+            cin.clear();
+            cin.ignore(128, '\n');
+
+            // Reprint map
+            cout << endl;
+            for (int i = 0; i < row; i++)
+            {
+                for (int j = 0; j < col; j++)
+                {
+                    if (arr[i][j] == '\0')
+                        cout << "_ ";
+                    else
+                        cout << arr[i][j] << " ";
+                }
+                cout << endl;
+            }
+
+            if (input != "M" || input != "m" || input != "q'" || input != " Q")
+                cout << "(m)ove -or- (q)uit? ";
+            cin >> input;
+
+            if (cin.fail())
+            {
+                cin.clear();
+                cin.ignore(128, '\n');
+                input = "";
+            }
+
+            if (input != "m" && input != "M" && input != "q" && input != "Q")
+            {
+                cout << "Error: Invalid option\n";
+                for (int i = 0; i < row; i++)
+                {
+                    for (int j = 0; j < col; j++)
+                    {
+                        cout << (arr[i][j] == '\0' ? "_ " : string(1, arr[i][j]) + " ");
+                    }
+                    cout << endl;
+                }
+            }
+            continue;
+
+            // No need for continue here — the loop will repeat naturally
+        }
+
+        // Validate column input
+        while (true)
+        {
+            cout << "Move Column: ";
+            cin >> moveInputCol;
+
+            if (!cin.fail() && moveInputCol >= 0 && moveInputCol <= 14)
+            {
+                invalidInput = false;
+                break; // valid column
+            }
+            else {
+                invalidInput = true;
+
+            cout << "\nError: Move must be between 0 and 14\n";
+            cin.clear();
+            cin.ignore(128, '\n');
+
+
+           //  cout << "Error: Invalid option\n";
+           cout << endl; 
+                for (int i = 0; i < row; i++)
+                {
+                    for (int j = 0; j < col; j++)
+                    {
+                        cout << (arr[i][j] == '\0' ? "_ " : string(1, arr[i][j]) + " ");
+                    }
+                    cout << endl;
+                }
+            }
+            // Reprint map
+            // for (int i = 0; i < row; i++)
+            // {
+            //     for (int j = 0; j < col; j++)
+            //     {
+            //         if (arr[i][j] == '\0')
+            //             cout << "_ ";
+            //         else
+            //             cout << arr[i][j] << " ";
+            //     }
+            //     cout << endl;
+            // }
+
+           break ; 
+        }
+
+        if (invalidInput == false && arr[moveInputRow][moveInputCol] == 't')
+        {
+            cout << "\nThere's a tree in your way\n\n";
+
+
+             for (int i = 0; i < row; i++)
+                {
+                    for (int j = 0; j < col; j++)
+                    {
+                        cout << (arr[i][j] == '\0' ? "_ " : string(1, arr[i][j]) + " ");
+                    }
+                    cout << endl;
+                }
+            continue;
+        }
+        //   else
+        //    {
+        // arr[moveInputRow][moveInputCol] = 'p';
+        //      } // Reprint map
+if ( invalidInput == true ) { 
+    continue;
+    }else { 
+        cout << "\n\nMoved to row " << moveInputRow << " column " << moveInputCol << endl << "\n" ;
+        for (int i = 0; i < row; i++)
+        {
+            for (int j = 0; j < col; j++)
+            {
+                if (i == moveInputRow && j == moveInputCol)
+                {
+                    arr[i][j] = 'p';
+                    cout << arr[i][j] << ' ';
+                }
+                else if (arr[i][j] == '\0' || arr[i][j] == 'p')
+                {
+                    cout << "_ ";
+                }
+                else
+                {
+                    cout << arr[i][j] << " ";
+                }
+            }
+        
+        cout << endl; 
+        }
+                  }
     }
     return 0;
 }
 
-// reads from "map.csv" into passed map array
-void readMap(Entity map[MAP_Y_SIZE][MAP_X_SIZE])
-{
 
 
-    //this code will read the map from a csv file 
-    // x and y and entity type and chance 
-    ifstream file("map.csv");
-    if (!file.is_open()) {
-        cerr << "Error opening file!" << endl;
-        return;
-    }
-    
-    // PLACE YOUR CODE TO READ MAP FROM .csv HERE
-}
 
-// prints passed map with player on it
-void displayMap(Entity map[MAP_Y_SIZE][MAP_X_SIZE], Player player)
-{
-    // top line
-    cout << left << "\n*  ";
-    for (int x = 0; x < MAP_X_SIZE; x++)
-        cout << setw(3) << x;
-    cout << " *\n";
-    // map
-    for (int y = 0; y < MAP_Y_SIZE; y++)
-    {
-        // output row number
-        cout << left << setw(3) << y;
-        // output all items in the row
-        for (int x = 0; x < MAP_X_SIZE; x++)
-        {
-            cout << setw(3);
-            // output 'p' for player
-            if (x == player.position[0] && y == player.position[1])
-                cout << 'p';
-            // output first character of type if entity at space
-            else if (map[y][x].type != "")
-                cout << char(tolower(map[y][x].type[0]));
-            // output blank if nothing at space
-            else
-                cout << "";
-        }
-        // end of line
-        cout << right << setw(2) << y << endl;
-    }
-    // bottom line
-    cout << left << "*  ";
-    for (int x = 0; x < MAP_X_SIZE; x++)
-        cout << setw(3) << x;
-    cout << " *\n";
-}
-
-// prints passed inventory
-void displayInventory(Player player)
-{
-    // don't output if nothing in inventory
-    if (player.inventorySize == 0)
-        return;
-    // inventory label
-    cout << "Inventory: ";
-    // output each item in inventory's type separated by commas
-    for (int i = 0; i < player.inventorySize; i++)
-        cout << player.inventory[i].type
-             << ((i < player.inventorySize - 1) ? ", " : "\n");
-}
-
-// prints passsed bank
-void displayBank(Entity storage[MAX_BANK], int size)
-{
-    // don't output if nothing in bank
-    if (size == 0)
-        return;
-    // inventory label
-    cout << "Bank: ";
-    // output each item in bank's type separated by commas
-    for (int i = 0; i < size; i++)
-        cout << storage[i].type << ((i < size - 1) ? ", " : "\n");
-}
-
-// gets a valid command from the user in lowercase
-string getCommand()
-{
-    string command = "";
-    // loop until valid command is entered
-    do
-    {
-        // get command
-        cout << "Command: ";
-        getline(cin, command);
-        // lowercase command
-        for (unsigned int i = 0; i < command.length(); i++)
-            command[i] = tolower(command[i]);
-        // error check command
-        if (command != "move" && command != "chop" &&
-            command != "mine" && command != "bank" &&
-            command != "exit")
-        {
-            cout << "Invalid command!\n";
-        }
-    } while (command != "move" && command != "chop" &&
-             command != "mine" && command != "bank" &&
-             command != "exit");
-    // return the command (in all lower case)
-    return command;
-}
-
-// returns a pseudo-random number each time called
-double rng()
-{
-    // generates a pseudo-random double and returns it
-    // seed the generator initially
-    static unsigned int seed = 0;
-
-    // parameters for the LCG
-    unsigned int a = 1103515245;
-    unsigned int c = 12345;
-    unsigned int m = 2147483648; // 2^31
-
-    // generate new seed
-    seed = (a * seed + c) % m;
-    return seed / static_cast<double>(RAND_MAX);
-}
-
-// PLACE YOUR move() FUNCTION HERE
-
-// PLACE YOUR chop() FUNCTION HERE
-
-// PLACE YOUR mine() FUNCTION HERE
-
-// PLACE YOUR bank() FUNCTION HERE
+// read 10 numbers from user in a array and then print the array in a reverse order we do not have to chagne the position 
